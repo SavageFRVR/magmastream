@@ -152,10 +152,10 @@ export class Node {
 		if (fs.existsSync(sessionIdsFilePath)) {
 			// Emit a debug event indicating that session IDs are being loaded
 			this.manager.emit("debug", `[NODE] Loading sessionIds from file: ${sessionIdsFilePath}`);
-			
+
 			// Read the content of the sessionIds.json file as a string
 			const sessionIdsData = fs.readFileSync(sessionIdsFilePath, "utf-8");
-			
+
 			// Parse the JSON string into an object and convert it into a Map
 			sessionIdsMap = new Map(Object.entries(JSON.parse(sessionIdsData)));
 		}
@@ -270,7 +270,6 @@ export class Node {
 		// Destroy the node from the manager
 		this.manager.destroyNode(this.options.identifier);
 	}
-
 
 	/**
 	 * Attempts to reconnect the node if the connection is lost.
@@ -527,7 +526,7 @@ export class Node {
 
 	/**
 	 * Handles the event when a track ends.
-	 * Depending on the reason for the track ending, it may handle failed tracks, replaced tracks, 
+	 * Depending on the reason for the track ending, it may handle failed tracks, replaced tracks,
 	 * repeated tracks, play the next track in the queue, or end the queue if there are no more tracks.
 	 * Emits a `trackEnd` event and a `playerStateUpdate` event.
 	 *
@@ -688,7 +687,19 @@ export class Node {
 		}
 
 		const url = `https://ws.audioscrobbler.com/2.0/?method=track.getSimilar&artist=${artist}&track=${title}&limit=10&autocorrect=1&api_key=${apiKey}&format=json`;
-		const response = await axios.get(url);
+
+		let response: axios.AxiosResponse;
+
+		try {
+			response = await axios.get(url);
+		} catch (error) {
+			console.log(`Url: ${url}`);
+			console.log(`Api Key: ${apiKey}`);
+			console.log(`Artist: ${artist}`);
+			console.log(`Title: ${title}`);
+			console.log(`Error: ${error}`);
+			return false;
+		}
 
 		if (response.data.error || !response.data.similartracks?.track?.length) {
 			const retryUrl = `https://ws.audioscrobbler.com/2.0/?method=artist.getTopTracks&artist=${artist}&autocorrect=1&api_key=${apiKey}&format=json`;
@@ -839,7 +850,7 @@ export class Node {
 	/**
 	 * Handles the event when a track gets stuck during playback.
 	 * Stops the current track and emits a `trackStuck` event.
-	 * 
+	 *
 	 * @param {Player} player - The player associated with the stuck track.
 	 * @param {Track} track - The track that has encountered a stuck event.
 	 * @param {TrackStuckEvent} payload - The event payload containing additional data about the track stuck event.
@@ -854,7 +865,7 @@ export class Node {
 	/**
 	 * Handles the event when a track encounters an error during playback.
 	 * Stops the current track and emits a `trackError` event.
-	 * 
+	 *
 	 * @param {Player} player - The player associated with the track that encountered an error.
 	 * @param {Track | UnresolvedTrack} track - The track that encountered an error.
 	 * @param {TrackExceptionEvent} payload - The event payload containing additional data about the track error event.
@@ -920,7 +931,7 @@ export class Node {
 	private sponsorBlockChapterStarted(player: Player, track: Track, payload: SponsorBlockChapterStarted) {
 		return this.manager.emit("chapterStarted", player, track, payload);
 	}
-	
+
 	/**
 	 * Fetches Lavalink node information.
 	 * @returns {Promise<LavalinkInfo>} A promise that resolves to the Lavalink node information.
@@ -969,7 +980,6 @@ export class Node {
 		return;
 	}
 
-	
 	/**
 	 * Deletes the sponsorblock segments for a player.
 	 * @param {Player} player - The player to delete the sponsorblocks for.
